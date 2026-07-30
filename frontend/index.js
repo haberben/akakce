@@ -1,10 +1,12 @@
 let historyChart = null;
 let selectedBarcodes = [];
+let trackedStores = JSON.parse(localStorage.getItem("trackedStores")) || ["idefix"];
 
 document.addEventListener("DOMContentLoaded", () => {
     // Initial fetch
     loadDashboard();
     checkScanStatus();
+    renderStoreTags();
 
     // Event listeners
     document.getElementById("btn-add-barcodes").addEventListener("click", addBarcodes);
@@ -16,6 +18,12 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-refresh-selected").addEventListener("click", refreshSelected);
     document.getElementById("btn-delete-selected").addEventListener("click", deleteSelected);
     document.getElementById("btn-clear-selection").addEventListener("click", clearSelection);
+    
+    // Store settings operations
+    document.getElementById("btn-add-store").addEventListener("click", addStoreTag);
+    document.getElementById("input-store-tag").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") addStoreTag();
+    });
     
     // Periodically poll for scan progress
     setInterval(checkScanStatus, 2000);
@@ -105,6 +113,40 @@ function createProductCard(product) {
         ? `<img src="${product.image_url}" class="product-img" alt="${product.name}">`
         : `<i class="fa-solid fa-image-portrait" style="font-size: 32px; color: var(--text-dark)"></i>`;
 
+    // Clickable title linking to Akakçe page
+    const titleHtml = product.url
+        ? `<a href="${product.url}" target="_blank" class="title-link" title="Akakçe'de Gör">${product.name} <i class="fa-solid fa-arrow-up-right-from-square"></i></a>`
+        : product.name;
+
+    // Tracked store prices on card front
+    let trackedPricesHtml = "";
+    if (product.last_scanned && product.competitors && product.competitors.length > 0) {
+        trackedPricesHtml = `<div class="card-tracked-prices">`;
+        trackedStores.forEach(store => {
+            const match = product.competitors.find(c => 
+                c.store_name.toLowerCase().includes(store.toLowerCase()) || 
+                (c.sub_seller && c.sub_seller.toLowerCase().includes(store.toLowerCase()))
+            );
+            
+            if (match) {
+                trackedPricesHtml += `
+                    <div class="tracked-price-row has-price" title="${match.store_name} - ${match.sub_seller || ''}">
+                        <span class="store-name">${store.toUpperCase()}</span>
+                        <span class="store-price">${match.price.toLocaleString('tr-TR')} TL</span>
+                    </div>
+                `;
+            } else {
+                trackedPricesHtml += `
+                    <div class="tracked-price-row no-price">
+                        <span class="store-name">${store.toUpperCase()}</span>
+                        <span class="store-price">Yok</span>
+                    </div>
+                `;
+            }
+        });
+        trackedPricesHtml += `</div>`;
+    }
+
     card.innerHTML = `
         <!-- Selection Checkbox -->
         <input type="checkbox" class="card-checkbox" onchange="toggleSelect(event, '${product.barcode}')" ${isSelected ? 'checked' : ''}>
@@ -115,7 +157,7 @@ function createProductCard(product) {
             </div>
             <div class="product-info">
                 <div>
-                    <h3 class="product-title" title="${product.name}">${product.name}</h3>
+                    <h3 class="product-title" title="${product.name}">${titleHtml}</h3>
                     <div class="product-barcode">${product.barcode}</div>
                 </div>
                 <div class="product-pricing">
@@ -124,6 +166,9 @@ function createProductCard(product) {
                 </div>
             </div>
         </div>
+        
+        <!-- Tracked Store Prices Front View -->
+        ${trackedPricesHtml}
         
         <!-- Expandable competitor list -->
         <div class="competitors-accordion" id="accordion-${product.barcode}">
@@ -569,3 +614,48 @@ async function refreshSingleProduct(event, barcode) {
         btn.innerHTML = originalContent;
     }
 }
+
+// Render tracked store tags in settings toolbar
+function renderStoreTags() {
+    const container = document.getElementById("store-tags");
+    if (!container) return;
+    container.innerHTML = "";
+    
+    trackedStores.forEach(store => {
+        const tag = document.createElement("span");
+        tag.className = "store-tag";
+        tag.innerHTML = `
+            ${store.toUpperCase()}
+            <button class="btn-delete-tag" onclick="deleteStoreTag('${store}')" title="Mağazayı Kaldır">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        `;
+        container.appendChild(tag);
+    });
+}
+
+// Add a new store tag to filter
+function addStoreTag() {
+    const input = document.getElementById("input-store-tag");
+    const name = input.value.trim().toLowerCase();
+    if (!name) return;
+    
+    if (!trackedStores.includes(name)) {
+        trackedStores.push(name);
+        localStorage.setItem("trackedStores", JSON.stringify(trackedStores));
+        renderStoreTags();
+        loadDashboard(); // reload dashboard to apply inline prices
+    }
+    input.value = "";
+}
+
+// Delete a store tag from filter
+function deleteStoreTag(storeName) {
+    trackedStores = trackedStores.filter(s => s !== storeName);
+    localStorage.setItem("trackedStores", JSON.stringify(trackedStores));
+    renderStoreTags();
+    loadDashboard(); // reload dashboard
+}
+
+// Make functions globally accessible
+window.deleteStoreTag = deleteStoreTag;

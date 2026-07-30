@@ -184,6 +184,18 @@ def get_product_dashboard_data():
         prod['current_price'] = current_lowest
         prod['previous_price'] = previous_lowest
         
+        # Include latest competitor details directly in dashboard data
+        competitors = []
+        if len(scan_ids) >= 1:
+            cursor.execute("""
+            SELECT store_name, sub_seller, price, link 
+            FROM price_history 
+            WHERE barcode = ? AND scan_id = ?
+            ORDER BY price ASC
+            """, (barcode, scan_ids[0]))
+            competitors = [dict(row) for row in cursor.fetchall()]
+        prod['competitors'] = competitors
+        
         price_change_pct = None
         if current_lowest is not None and previous_lowest is not None:
             price_change_pct = round(((current_lowest - previous_lowest) / previous_lowest) * 100, 2)
