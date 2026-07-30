@@ -1,0 +1,23 @@
+# Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Databases (we want to keep the online DB clean, it will initialize fresh on deploy)
+competitors.db
+competitors.db-journal
+
+# Scratch / temp files
+scratch/
+test_*.py
+*screenshot.png
+body_text.txt
+product_page.html
+
+# IDE / System files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rakip Fiyat Analiz Paneli | Akakçe Tracker</title>
+    <!-- Google Fonts: Outfit for typography, JetBrains Mono for codes/prices -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- ChartJS for price history graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="/static/index.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Panel -->
+        <aside class="sidebar glass-panel">
+            <div class="brand">
+                <i class="fa-solid fa-chart-line brand-icon"></i>
+                <div class="brand-text">
+                    <h1>AKAKÇE TRACKER</h1>
+                    <span>Rakip Fiyat Analizi</span>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3><i class="fa-solid fa-barcode icon-spacer"></i> Toplu Barkod Ekle</h3>
+                <p class="section-desc">Her satıra bir adet barkod gelecek şekilde giriş yapın.</p>
+                <textarea id="barcode-input" placeholder="Örn:&#10;8690637042554&#10;8690504034033" rows="8" class="custom-textarea"></textarea>
+                <button id="btn-add-barcodes" class="btn btn-primary btn-glow">
+                    <i class="fa-solid fa-plus btn-icon"></i> Barkodları Ekle ve Tara
+                </button>
+            </div>
+            
+            <div class="panel-section">
+                <h3><i class="fa-solid fa-sliders icon-spacer"></i> Genel Kontroller</h3>
+                <button id="btn-scan-all" class="btn btn-secondary btn-full">
+                    <i class="fa-solid fa-rotate btn-icon"></i> Tüm Fiyatları Yenile
+                </button>
+            </div>
+            
+            <!-- Live Scanning Progress Box -->
+            <div id="scan-progress-box" class="scan-progress-card glass-panel hidden">
+                <div class="progress-header">
+                    <span class="pulse-indicator"></span>
+                    <h4>Fiyatlar Güncelleniyor...</h4>
+                </div>
+                <div class="progress-bar-container">
+                    <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
+                </div>
+                <div class="progress-stats">
+                    <span id="progress-ratio">0/0</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="progress-details">
+                    <div class="detail-row">
+                        <span class="label">Taranan:</span>
+                        <span id="progress-barcode" class="value code-font">-</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Dashboard Content -->
+        <main class="main-content">
+            <header class="main-header glass-panel">
+                <div class="header-info">
+                    <h2>Rakip Fiyat Analiz Paneli</h2>
+                    <p id="tracker-summary">Sistem yükleniyor...</p>
+                </div>
+                <div class="header-actions">
+                    <div class="search-bar">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="search-products" placeholder="Takip listesinde ara (isim veya barkod)...">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Grid -->
+            <section id="products-grid" class="products-grid">
+                <!-- Loading State placeholder -->
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Takip edilen ürünler yükleniyor...</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Product Details Modal (Visual History + Detail Comparison) -->
+    <div id="history-modal" class="modal-overlay hidden">
+        <div class="modal-container glass-panel">
+            <div class="modal-header">
+                <h3 id="modal-product-name">Ürün Fiyat Geçmişi</h3>
+                <button id="modal-close" class="btn-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="chart-container">
+                    <canvas id="history-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/index.js"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+# Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Databases
+competitors.db
+competitors.db-journal
+
+# Scratch files
+scratch/
+test_*.py
+*screenshot.png
+body_text.txt
+product_page.html
+
+# IDE files
+.vscode/
+.idea/
+.git/
+.gitignore
