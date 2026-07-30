@@ -92,7 +92,55 @@ defFormatDate = (dateStr) => {
 function createProductCard(product) {
     const card = document.createElement("div");
     const isSelected = selectedBarcodes.includes(product.barcode);
-    card.className = "product-card glass-panel has-checkbox" + (isSelected ? " selected" : "");
+    
+    // Find my minimum price from tracked stores
+    let myMinPrice = null;
+    let myMatchedStore = "";
+    if (product.competitors && product.competitors.length > 0) {
+        trackedStores.forEach(store => {
+            const match = product.competitors.find(c => 
+                c.store_name.toLowerCase().includes(store.toLowerCase()) || 
+                (c.sub_seller && c.sub_seller.toLowerCase().includes(store.toLowerCase()))
+            );
+            if (match) {
+                if (myMinPrice === null || match.price < myMinPrice) {
+                    myMinPrice = match.price;
+                    myMatchedStore = store;
+                }
+            }
+        });
+    }
+
+    let cardStatusClass = "";
+    let priceBadgeHtml = "";
+    
+    if (myMinPrice !== null && product.current_price) {
+        const diff = myMinPrice - product.current_price;
+        if (diff <= 0.5) { // cheapest (allow 0.5 TL rounding/margin)
+            cardStatusClass = " cheapest-mine";
+            priceBadgeHtml = `
+                <div class="my-price-status cheapest">
+                    <i class="fa-solid fa-circle-check"></i> En ucuz fiyat sizde (${myMatchedStore.toUpperCase()})
+                </div>
+            `;
+        } else {
+            cardStatusClass = " expensive-mine";
+            const diffPct = (diff / product.current_price) * 100;
+            priceBadgeHtml = `
+                <div class="my-price-status expensive" title="En ucuz rakip ile aranızdaki fark">
+                    <i class="fa-solid fa-circle-exclamation"></i> En ucuzdan <strong>+${diff.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} TL</strong> (+${diffPct.toFixed(2)}%) daha pahalı
+                </div>
+            `;
+        }
+    } else if (product.last_scanned) {
+        priceBadgeHtml = `
+            <div class="my-price-status not-listed">
+                <i class="fa-solid fa-circle-question"></i> Takip edilen mağazalarda fiyat bulunamadı
+            </div>
+        `;
+    }
+
+    card.className = "product-card glass-panel has-checkbox" + (isSelected ? " selected" : "") + cardStatusClass;
     card.dataset.name = product.name.toLowerCase();
     card.dataset.barcode = product.barcode;
     
@@ -169,6 +217,7 @@ function createProductCard(product) {
         </div>
         
         <!-- Tracked Store Prices Front View -->
+        ${priceBadgeHtml}
         ${trackedPricesHtml}
         
         <!-- Expandable competitor list -->

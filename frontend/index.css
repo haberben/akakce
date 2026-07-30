@@ -22,7 +22,7 @@
     --text-muted: #475569;
     --text-dark: #94a3b8;
     
-    --font-outfit: 'Outfit', sans-serif;
+    --font-outfit: 'Inter', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
     
     --radius-sm: 8px;
@@ -1037,7 +1037,7 @@ body {
 .tracked-price-row .store-price {
     font-family: var(--font-mono);
     font-weight: 700;
-    color: #ffffff;
+    color: var(--text-main);
 }
 
 .tracked-price-row.has-price .store-price {
@@ -1046,12 +1046,82 @@ body {
 
 .tracked-price-row.no-price {
     opacity: 0.5;
-    border-color: rgba(255, 255, 255, 0.03);
+    border-color: rgba(0, 0, 0, 0.05);
 }
 
 .tracked-price-row.no-price .store-price {
     color: var(--text-muted);
     font-size: 11px;
+}
+
+/* Price Status Badges */
+.my-price-status {
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid transparent;
+}
+
+.my-price-status.cheapest {
+    background: rgba(16, 185, 129, 0.06);
+    color: #065f46;
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.my-price-status.cheapest i {
+    color: #10b981;
+}
+
+.my-price-status.expensive {
+    background: rgba(239, 68, 68, 0.06);
+    color: #991b1b;
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.my-price-status.expensive i {
+    color: #ef4444;
+}
+
+.my-price-status.not-listed {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #e2e8f0;
+}
+
+.my-price-status.not-listed i {
+    color: #94a3b8;
+}
+
+/* Card Glow and Top Bar overrides for price status */
+.product-card.cheapest-mine {
+    background: rgba(16, 185, 129, 0.02);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.product-card.cheapest-mine:hover {
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.06);
+}
+
+.product-card.cheapest-mine::before {
+    background: #10b981 !important;
+}
+
+.product-card.expensive-mine {
+    background: rgba(239, 68, 68, 0.015);
+    border-color: rgba(239, 68, 68, 0.18);
+}
+
+.product-card.expensive-mine:hover {
+    box-shadow: 0 10px 30px rgba(239, 68, 68, 0.06);
+}
+
+.product-card.expensive-mine::before {
+    background: #ef4444 !important;
 }
 
 
