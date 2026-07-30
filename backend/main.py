@@ -180,7 +180,7 @@ def add_barcodes(req: BarcodeRequest, background_tasks: BackgroundTasks):
     
     for bc in req.barcodes:
         bc_clean = bc.strip()
-        if not bc_clean or not bc_clean.isdigit():
+        if not bc_clean:
             continue
         if bc_clean not in all_products:
             # Insert with placeholder name
