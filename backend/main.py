@@ -1,6 +1,12 @@
 import os
+import sys
+import asyncio
 import threading
 from typing import List
+
+# Force ProactorEventLoop on Windows for Playwright subprocess compatibility
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -158,9 +164,11 @@ def run_scan_task(barcodes_to_scan: List[str]):
         database.update_scan_status(scan_id, "completed")
         print("Background scan task completed successfully.")
     except Exception as e:
+        import traceback
         database.update_scan_status(scan_id, "failed")
         scan_state["errors"].append(f"Tarama hatası: {str(e)}")
-        print(f"Error in background scan task: {e}")
+        print("Error in background scan task:")
+        traceback.print_exc()
     finally:
         scan_state["active"] = False
 

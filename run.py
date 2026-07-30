@@ -1,6 +1,11 @@
 import uvicorn
 import os
 import sys
+import asyncio
+
+# Force ProactorEventLoop on Windows for Playwright subprocess compatibility
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 # Ensure the root directory is in python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
