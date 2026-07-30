@@ -3,7 +3,7 @@ import os
 import uuid
 from datetime import datetime
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "competitors.db")
+DB_PATH = os.getenv("DB_PATH", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "competitors.db"))
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
