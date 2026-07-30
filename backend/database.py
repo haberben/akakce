@@ -221,3 +221,12 @@ def get_product_history_chart_data(barcode):
     rows = cursor.fetchall()
     conn.close()
     return [{"time": row['scan_time'], "price": row['min_price']} for row in rows]
+
+def clear_all_data():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM price_history")
+    cursor.execute("DELETE FROM products")
+    cursor.execute("DELETE FROM scans")
+    conn.commit()
+    conn.close()

@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Event listeners
     document.getElementById("btn-add-barcodes").addEventListener("click", addBarcodes);
     document.getElementById("btn-scan-all").addEventListener("click", scanAll);
+    document.getElementById("btn-delete-all").addEventListener("click", deleteAllProducts);
     document.getElementById("search-products").addEventListener("input", filterProducts);
     document.getElementById("modal-close").addEventListener("click", closeModal);
     
@@ -442,12 +443,12 @@ async function showHistory(barcode) {
                 datasets: [{
                     label: 'En Ucuz Fiyat (TL)',
                     data: prices,
-                    borderColor: '#6366f1',
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    borderColor: '#ff6000',
+                    backgroundColor: 'rgba(255, 96, 0, 0.1)',
                     borderWidth: 3,
                     fill: true,
                     tension: 0.3,
-                    pointBackgroundColor: '#818cf8',
+                    pointBackgroundColor: '#ff7a33',
                     pointBorderColor: '#ffffff',
                     pointHoverRadius: 7
                 }]
@@ -458,20 +459,20 @@ async function showHistory(barcode) {
                 plugins: {
                     legend: {
                         labels: {
-                            color: '#94a3b8',
+                            color: '#475569',
                             font: { family: 'Outfit', size: 12 }
                         }
                     }
                 },
                 scales: {
                     x: {
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                        ticks: { color: '#94a3b8', font: { family: 'Outfit', size: 10 } }
+                        grid: { color: 'rgba(15, 23, 42, 0.05)' },
+                        ticks: { color: '#475569', font: { family: 'Outfit', size: 10 } }
                     },
                     y: {
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        grid: { color: 'rgba(15, 23, 42, 0.05)' },
                         ticks: { 
-                            color: '#94a3b8', 
+                            color: '#475569', 
                             font: { family: 'JetBrains Mono', size: 10 },
                             callback: function(value) { return value.toLocaleString('tr-TR') + ' TL'; }
                         }
@@ -659,3 +660,27 @@ function deleteStoreTag(storeName) {
 
 // Make functions globally accessible
 window.deleteStoreTag = deleteStoreTag;
+
+// Clear all database products
+async function deleteAllProducts() {
+    if (!confirm("Takip listesindeki TÜM ürünleri silmek istediğinize emin misiniz? Bu işlem geri alınamaz!")) return;
+    
+    const btn = document.getElementById("btn-delete-all");
+    const originalContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Temizleniyor...`;
+    
+    try {
+        const response = await fetch("/api/products", { method: "DELETE" });
+        if (!response.ok) throw new Error("Temizleme işlemi başarısız oldu.");
+        
+        const result = await response.json();
+        alert(result.message);
+        loadDashboard();
+    } catch (error) {
+        alert("Hata: " + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+    }
+}

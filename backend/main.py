@@ -116,6 +116,15 @@ def delete_product(barcode: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# API: Clear all products
+@app.delete("/api/products")
+def delete_all_products():
+    try:
+        database.clear_all_data()
+        return {"status": "success", "message": "Tüm takip listesi başarıyla temizlendi."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Background scan executor
 def run_scan_task(barcodes_to_scan: List[str]):
     global scan_state
