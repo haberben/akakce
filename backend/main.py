@@ -194,17 +194,23 @@ def add_barcodes(req: BarcodeRequest, background_tasks: BackgroundTasks):
             
     return {"status": "success", "message": "Eklenen yeni barkod yok (tümü zaten takip listesinde veya geçersiz).", "added": []}
 
-# API: Trigger full scan
+# API: Trigger scan (all or selected batch)
+class ScanRequest(BaseModel):
+    barcodes: List[str] = None
+
 @app.post("/api/scan")
-def trigger_scan(background_tasks: BackgroundTasks):
+def trigger_scan(req: ScanRequest = None, background_tasks: BackgroundTasks = None):
     if scan_state["active"]:
         return {"status": "error", "message": "Zaten aktif bir tarama işlemi bulunuyor."}
         
-    products = database.get_all_products()
-    barcodes = [p['barcode'] for p in products]
-    
+    if req and req.barcodes:
+        barcodes = req.barcodes
+    else:
+        products = database.get_all_products()
+        barcodes = [p['barcode'] for p in products]
+        
     if not barcodes:
-        return {"status": "error", "message": "Takip listesinde taranacak ürün bulunmuyor."}
+        return {"status": "error", "message": "Taranacak ürün bulunmuyor."}
         
     background_tasks.add_task(run_scan_task, barcodes)
     return {"status": "success", "message": f"{len(barcodes)} ürün için tarama işlemi arka planda başlatıldı."}

@@ -80,6 +80,24 @@
                 </div>
             </header>
 
+            <!-- Selection Toolbar (Hidden by default) -->
+            <div id="selection-toolbar" class="selection-toolbar glass-panel hidden">
+                <div class="selection-info">
+                    <span id="selection-count"><i class="fa-solid fa-square-check icon-spacer"></i>0 ürün seçildi</span>
+                </div>
+                <div class="toolbar-actions">
+                    <button id="btn-refresh-selected" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-arrows-rotate"></i> Seçilenleri Yenile
+                    </button>
+                    <button id="btn-delete-selected" class="btn btn-danger btn-sm">
+                        <i class="fa-solid fa-trash-can"></i> Seçilenleri Sil
+                    </button>
+                    <button id="btn-clear-selection" class="btn btn-secondary btn-sm">
+                        Seçimi Kaldır
+                    </button>
+                </div>
+            </div>
+
             <!-- Dashboard Grid -->
             <section id="products-grid" class="products-grid">
                 <!-- Loading State placeholder -->

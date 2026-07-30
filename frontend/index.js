@@ -1,4 +1,5 @@
 let historyChart = null;
+let selectedBarcodes = [];
 
 document.addEventListener("DOMContentLoaded", () => {
     // Initial fetch
@@ -11,9 +12,15 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("search-products").addEventListener("input", filterProducts);
     document.getElementById("modal-close").addEventListener("click", closeModal);
     
+    // Batch operations
+    document.getElementById("btn-refresh-selected").addEventListener("click", refreshSelected);
+    document.getElementById("btn-delete-selected").addEventListener("click", deleteSelected);
+    document.getElementById("btn-clear-selection").addEventListener("click", clearSelection);
+    
     // Periodically poll for scan progress
     setInterval(checkScanStatus, 2000);
 });
+
 
 // Load Dashboard Products
 async function loadDashboard() {
@@ -75,7 +82,8 @@ defFormatDate = (dateStr) => {
 // Create Product Card DOM Element
 function createProductCard(product) {
     const card = document.createElement("div");
-    card.className = "product-card glass-panel";
+    const isSelected = selectedBarcodes.includes(product.barcode);
+    card.className = "product-card glass-panel has-checkbox" + (isSelected ? " selected" : "");
     card.dataset.name = product.name.toLowerCase();
     card.dataset.barcode = product.barcode;
     
@@ -98,6 +106,9 @@ function createProductCard(product) {
         : `<i class="fa-solid fa-image-portrait" style="font-size: 32px; color: var(--text-dark)"></i>`;
 
     card.innerHTML = `
+        <!-- Selection Checkbox -->
+        <input type="checkbox" class="card-checkbox" onchange="toggleSelect(event, '${product.barcode}')" ${isSelected ? 'checked' : ''}>
+
         <div class="product-card-main">
             <div class="product-img-wrapper">
                 ${imageHtml}
@@ -128,6 +139,9 @@ function createProductCard(product) {
             <div style="display:flex; gap: 8px;">
                 <button class="btn btn-icon-only" onclick="deleteProduct('${product.barcode}')" title="Ürünü Sil">
                     <i class="fa-solid fa-trash-can"></i>
+                </button>
+                <button class="btn btn-card-refresh" onclick="refreshSingleProduct(event, '${product.barcode}')" title="Fiyatları Yenile">
+                    <i class="fa-solid fa-arrows-rotate"></i> Yenile
                 </button>
                 <button class="btn btn-card-history" onclick="showHistory('${product.barcode}')" ${!product.last_scanned ? 'disabled' : ''}>
                     <i class="fa-solid fa-chart-line"></i> Grafik
@@ -431,5 +445,127 @@ function closeModal() {
     if (historyChart) {
         historyChart.destroy();
         historyChart = null;
+    }
+}
+
+// Checkbox selection toggle
+function toggleSelect(event, barcode) {
+    const card = event.target.closest('.product-card');
+    const checked = event.target.checked;
+    
+    if (checked) {
+        if (!selectedBarcodes.includes(barcode)) {
+            selectedBarcodes.push(barcode);
+        }
+        card.classList.add('selected');
+    } else {
+        selectedBarcodes = selectedBarcodes.filter(b => b !== barcode);
+        card.classList.remove('selected');
+    }
+    
+    updateSelectionToolbar();
+}
+
+// Update selection toolbar visibility and count text
+function updateSelectionToolbar() {
+    const toolbar = document.getElementById("selection-toolbar");
+    const countLabel = document.getElementById("selection-count");
+    
+    if (selectedBarcodes.length > 0) {
+        toolbar.classList.remove("hidden");
+        countLabel.innerHTML = `<i class="fa-solid fa-square-check icon-spacer"></i>${selectedBarcodes.length} ürün seçildi`;
+    } else {
+        toolbar.classList.add("hidden");
+    }
+}
+
+// Clear all card selections
+function clearSelection() {
+    selectedBarcodes = [];
+    document.querySelectorAll(".card-checkbox").forEach(cb => cb.checked = false);
+    document.querySelectorAll(".product-card").forEach(card => card.classList.remove("selected"));
+    updateSelectionToolbar();
+}
+
+// Refresh selected barcodes
+async function refreshSelected() {
+    if (selectedBarcodes.length === 0) return;
+    
+    const btn = document.getElementById("btn-refresh-selected");
+    btn.disabled = true;
+    btn.innerHTML = `<div class="spinner" style="width:14px; height:14px; border-width:2px; display:inline-block; margin-right:6px;"></div> Yenileniyor...`;
+    
+    try {
+        const response = await fetch("/api/scan", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ barcodes: selectedBarcodes })
+        });
+        
+        if (!response.ok) throw new Error("Tarama tetiklenemedi");
+        
+        const result = await response.json();
+        alert(result.message);
+        clearSelection();
+        checkScanStatus();
+    } catch (error) {
+        alert("Hata: " + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-arrows-rotate"></i> Seçilenleri Yenile`;
+    }
+}
+
+// Delete selected barcodes
+async function deleteSelected() {
+    if (selectedBarcodes.length === 0) return;
+    if (!confirm(`Seçilen ${selectedBarcodes.length} ürünü takip listesinden çıkarmak istediğinize emin misiniz?`)) return;
+    
+    const btn = document.getElementById("btn-delete-selected");
+    btn.disabled = true;
+    btn.innerHTML = `<div class="spinner" style="width:14px; height:14px; border-width:2px; display:inline-block; margin-right:6px;"></div> Siliniyor...`;
+    
+    try {
+        // Send delete calls in parallel
+        await Promise.all(selectedBarcodes.map(barcode => 
+            fetch(`/api/products/${barcode}`, { method: "DELETE" })
+        ));
+        
+        alert("Seçilen ürünler başarıyla silindi.");
+        clearSelection();
+        loadDashboard();
+    } catch (error) {
+        alert("Hata: " + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-trash-can"></i> Seçilenleri Sil`;
+    }
+}
+
+// Refresh single product
+async function refreshSingleProduct(event, barcode) {
+    event.stopPropagation(); // prevent card toggle click
+    
+    const btn = event.target.closest(".btn-card-refresh");
+    const originalContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+    
+    try {
+        const response = await fetch("/api/scan", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ barcodes: [barcode] })
+        });
+        
+        if (!response.ok) throw new Error("Tarama tetiklenemedi");
+        
+        const result = await response.json();
+        // Trigger global polling check
+        checkScanStatus();
+    } catch (error) {
+        alert("Hata: " + error.message);
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
     }
 }
